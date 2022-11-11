@@ -1,17 +1,31 @@
 import React from 'react';
 import './App.css';
 import { auth, db } from './firebase/init'
-import {collection, addDoc, getDocs, getDocm, doc } from "firebase/firestore"
+import {collection, addDoc, getDocs, getDoc, doc, query, where, updateDoc } from "firebase/firestore"
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 
 function App() {
   const [user, setUser] = React.useState({})
   const [loading, setLoading] = React.useState(true)
 
+  async function updatePost(){
+    const hardCodedID = "0h5P4Jojbe0XLsKTc0TI"
+    const postRef = doc(db, "posts", hardCodedID)
+    const post = await getPostById(hardCodedID)
+    console.log(post)
+    const newPost = {
+      ...post,
+      title:"land 400k"
+    }
+    console.log(newPost)
+    // updateDoc(postRef, newPost)
+  }
+
   function createPost(){
     const post = {
-      title: "land a 200k job",
-      description: "finish FES",
+      title: "finish firebase",
+      description: "do fes",
+      uid: user.uid,
     }
     addDoc(collection(db,"posts"), post)
   }
@@ -22,10 +36,21 @@ function App() {
     console.log(posts)
   }
 
-  function getPostById(){
+  async function getPostById(){
     const hardCodedID = "0h5P4Jojbe0XLsKTc0TI"
     const postRef = doc(db, "posts", hardCodedID)
-    console.log(postRef)
+    const postSnap = await getDoc(postRef)
+    const post = postSnap.data()
+    console.log(post)
+  }
+
+  async function getPostbyUID(){
+    const postCollectionRef = await query(
+      collection(db,"posts"),
+      where("uid", "==", user.uid)
+    )
+    const { docs } = await getDocs(postCollectionRef)
+    console.log(docs.map(doc => doc.data()))
   }
 
   React.useEffect(() => {
@@ -72,6 +97,8 @@ function App() {
       <button onClick={createPost}>Create Post</button>
       <button onClick={getAllPosts}>get Posts</button>
       <button onClick={getPostById}>get specific post</button>
+      <button onClick={getPostbyUID}>uid post</button>
+      <button onClick={updatePost}>update</button>
     </div>
   );
 }
